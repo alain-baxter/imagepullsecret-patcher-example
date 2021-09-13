@@ -1,0 +1,6 @@
+# Based on https://github.com/titansoft-pte-ltd/imagepullsecret-patcher/blob/master/deploy-example/kubernetes-manifest/0_namespace.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: imagepullsecret-patcher
