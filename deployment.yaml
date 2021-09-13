@@ -1,0 +1,70 @@
+# Based on https://github.com/titansoft-pte-ltd/imagepullsecret-patcher/blob/master/deploy-example/kubernetes-manifest/2_deployment.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imagepullsecret-patcher
+  namespace: imagepullsecret-patcher
+  labels:
+    name: imagepullsecret-patcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: imagepullsecret-patcher
+  template:
+    metadata:
+      labels:
+        name: imagepullsecret-patcher
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: imagepullsecret-patcher
+      containers:
+        - name: imagepullsecret-patcher
+          image: "quay.io/titansoft/imagepullsecret-patcher:v0.14"
+          env:
+            # Will overwrite the secret if not matching centrally controlled version
+            - name: CONFIG_FORCE
+              value: "true"
+            # Turns on debug logging
+            - name: CONFIG_DEBUG
+              value: "false"
+            # Will only modify secrets originally created by imagepullsecret-patcher
+            - name: CONFIG_MANAGEDONLY
+              value: "false"
+            # Will only trigger once on startup, allowing this object to be converted into a CronJob
+            - name: CONFIG_RUNONCE
+              value: "false"
+            # A comma delimited list of service accounts that will be patched
+            - name: CONFIG_SERVICEACCOUNTS
+              value: "default"
+            # Patches all service accounts in all namespaces. If "true" CONFIG_SERVICEACCOUNTS is ignored.
+            - name: CONFIG_ALLSERVICEACCOUNT
+              value: "false"
+            # The path to the mounted docker config JSON file to replicate in all namespaces
+            - name: CONFIG_DOCKERCONFIGJSONPATH
+              value: "/app/secrets/.dockerconfigjson"
+            # The name of the secret created in all namespaces
+            - name: CONFIG_SECRETNAME
+              value: "image-pull-secret"
+            # A comma delimited list of namespaces excluded from management
+            - name: CONFIG_EXCLUDED_NAMESPACES
+              value: "kube-system"
+            # How often imagepullsecret-patcher checks namespaces
+            - name: CONFIG_LOOP_DURATION
+              value: "10s"
+          volumeMounts:
+            - name: source-image-pull-secret
+              mountPath: "/app/secrets"
+              readOnly: true
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 15Mi
+            limits:
+              cpu: 0.2
+              memory: 30Mi
+      volumes:
+        - name: source-image-pull-secret
+          secret: 
+            secretName: source-image-pull-secret
