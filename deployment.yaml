@@ -59,10 +59,10 @@ spec:
               readOnly: true
           resources:
             requests:
-              cpu: 0.1
+              cpu: "0.1"
               memory: 15Mi
             limits:
-              cpu: 0.2
+              cpu: "0.2"
               memory: 30Mi
       volumes:
         - name: source-image-pull-secret
